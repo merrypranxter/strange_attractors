@@ -1,0 +1,305 @@
+This is a massive addition for Shader Forge. Strange attractors are perfect for generative code art because they are inherently chaotic but mathematically bound—they never repeat, but they always possess a recognizable, fluid structure.
+To make this repo a goldmine for Copilot, we need to break it down into the mathematical engines, the GLSL rendering techniques, and the aesthetic post-processing. Here is the foundational data dump to seed your documentation.
+
+1. The Mathematical Engines (The Attractors)
+These are the core algorithms. In a shader context, you'll typically run these equations iteratively over thousands of particles or use them to warp a 2D coordinate space.
+Clifford Attractors (The Woven Silk)
+The Math: $x_{n+1} = \sin(a y_n) + c \cos(a x_n)$
+$y_{n+1} = \sin(b x_n) + d \cos(b y_n)$
+The Art: Clifford attractors operate in 2D and are incredibly sensitive to their $a, b, c, d$ parameters. Aesthetically, they render as gossamer, folded ribbons of light or dense, moiré-like interference patterns.
+Peter de Jong Attractors (The Bioluminescent Web)
+The Math:
+$x_{n+1} = \sin(a y_n) - \cos(b x_n)$
+$y_{n+1} = \sin(c x_n) - \cos(d y_n)$
+The Art: Similar to Clifford but with a softer, more sweeping curvature. When rendered with low opacity and high particle counts, they look like glowing deep-sea jellyfish or intricate orbital maps.
+Aizawa Attractor (The 3D Sphere Vortex)
+The Math: 3D differential equations creating a sphere with a tube-like structure through its z-axis.
+The Art: If you are raymarching or doing 3D particle projection, Aizawa is the holy grail. It looks like a swirling cosmic apple or a contained black hole. Rotating the camera around an Aizawa attractor while mapping velocity to color is visually explosive.
+Thomas' Cyclically Symmetric Attractor (The Liquid Crystal)
+The Math: A 3D system that lacks any dissipation, meaning it doesn't shrink down to a single point or line but forms an infinitely complex, interconnected 3D lattice.
+The Art: Renders as a 3D labyrinth. It’s perfect for creating volumetric, glowing, maze-like structures that feel like alien geometry.
+
+2. The GLSL Rendering Pipeline (Making it Art)
+Calculating the math is only 10% of the visual splash. The rendering pipeline is where it becomes art.
+Framebuffer Object (FBO) Ping-Ponging: Instead of clearing the canvas every frame, feed the previous frame's output back into the current frame with a slight fade (e.g., multiplying the previous frame by 0.95). This creates endless, glowing ghost trails that visualize the history of the chaos.
+Additive Blending: Set the webgl blend function to additive (gl.blendFunc(gl.SRC_ALPHA, gl.ONE)). When thousands of faint particles overlap at the dense nodes of the attractor, the light accumulates into blazing, blown-out hot spots.
+Velocity-to-Color Mapping: Calculate the speed of the particle (the distance between its previous position and current position) and map that float value to a color gradient. Slow particles might be deep, bruising indigos, while fast-whipping particles ignite into atomic greens and blinding yellows.
+Domain Warping: Take the output of the strange attractor and feed it into a Perlin or Simplex noise function before rendering to the screen. It breaks the perfect mathematical symmetry just enough to make it feel organic and unpredictable.
+
+3. Aesthetic Post-Processing & Textures
+To pull this away from a dry, scientific Mathematica plot, the final output needs heavy atmospheric styling.
+Shoegaze Smear (Temporal Blur): Combine the FBO feedback with a slight radial blur from the center of the screen. The math will look like it's dissolving into a heavy, dreamlike haze.
+CRT Phosphor Glow & VHS Tracking: Apply a subtle scanline overlay and a slight RGB channel separation (chromatic aberration) at the edges of the canvas. This grounds the infinite mathematical complexity into the warm, imperfect artifacting of vintage media.
+Maximalist Chromatics: Ditch standard scientific heatmaps. Build gradient palettes using extreme, hyper-saturated tones—think electric magentas, cyan plasma, deep ultraviolet voids, and radioactive greens. The goal is a tonal punch that feels nostalgic but aggressively futuristic.
+
+This should give Copilot enough structural context to start drafting the JS/GLSL code snippets and repo architecture. Which of the specific attractors do you want to dive into first to generate the actual shader code?
+Here is the repository architecture to feed into Copilot for the Strange Attractors module of Shader Forge. This structure cleanly separates the raw mathematical engines from the WebGL/JavaScript rendering pipeline and the aesthetic post-processing, making it highly modular for your creative coding workflow.
+Repository Structure: strange-attractors-art
+Plaintext
+strange-attractors-art/
+├── README.md
+├── .gitignore
+├── index.html
+├── src/
+│   ├── js/
+│   │   ├── main.js
+│   │   ├── fbo-pingpong.js
+│   │   └── color-maps.js
+│   ├── shaders/
+│   │   ├── attractors/
+│   │   │   ├── clifford.glsl
+│   │   │   ├── de-jong.glsl
+│   │   │   ├── aizawa.glsl
+│   │   │   └── thomas.glsl
+│   │   ├── compute.frag
+│   │   ├── render.vert
+│   │   ├── render.frag
+│   │   └── post-process.frag
+├── docs/
+│   ├── math-reference.md
+│   └── visual-targets.md
+
+
+
+File & Directory Descriptions
+Root Level
+README.md: The master codex for the repo. Contains the project overview, setup instructions for running the WebGL environment locally, and a brief explanation of how strange attractors are being utilized as an artistic device rather than a strict scientific plotting tool.
+.gitignore: Standard ignore file for node_modules, .env, and OS-specific hidden files (like .DS_Store).
+index.html: The main canvas container. It imports the necessary WebGL scripts, sets up the full-screen canvas, and handles any basic CSS overlays for the UI.
+/src/js/ (The Application Logic)
+main.js: The central WebGL context manager. It initializes the canvas, compiles the shader programs, sets up the geometry (e.g., a full-screen quad or particle buffers), and runs the requestAnimationFrame render loop.
+fbo-pingpong.js: The memory engine. This script handles the creation and swapping of Framebuffer Objects (FBOs). It takes the output of the current frame and feeds it back as a texture into the next frame to create those glowing, temporal ghost trails and history smears.
+color-maps.js: The tonal guide generator. This holds the arrays and interpolation logic for generating hyper-saturated, maximalist color palettes—channeling that extreme, vivid chromatic punch (think abstract, high-contrast neon and Lisa Frank-esque vibrancy) to map onto particle velocities and densities.
+/src/shaders/ (The Visual Engines)
+/attractors/*.glsl: A directory containing modular snippet files for the core math. Each file (clifford.glsl, aizawa.glsl, etc.) contains just the specific iterative differential equations. This allows you to hot-swap the math driving the simulation without rewriting the whole rendering pipeline.
+compute.frag: The physics solver. This fragment shader reads the current positions and velocities of the particles from a texture, applies the chosen attractor math from the snippet folder, and calculates the new positions for the next frame.
+render.vert: The vertex shader. It takes the calculated positions from the compute step, handles domain warping via Perlin or Simplex noise to break the perfect symmetry, and projects the particles onto the screen.
+render.frag: The primary drawing shader. It handles the additive blending (gl.blendFunc(gl.SRC_ALPHA, gl.ONE)) and maps the velocity data to the palettes generated in color-maps.js so that fast-moving nodes ignite into blown-out hot spots.
+post-process.frag: The aesthetic finisher. This is where the output is smeared and corrupted. It applies the radial blur for the "shoegaze" effect, the CRT phosphor glow, chromatic aberration, and subtle VHS tracking artifacts to ground the pure math in a vintage, physical medium.
+/docs/ (The Knowledge Base)
+math-reference.md: The raw equations, variables ($a, b, c, d$), and behavioral notes for how sensitive each attractor is to parameter changes.
+visual-targets.md: The prompt engineering and conceptual design document. It details the intended look and feel (e.g., "Bioluminescent Web" for Peter de Jong, "3D Sphere Vortex" for Aizawa) to ensure Copilot understands the stylistic end-goal.
+To make this repository an absolute powerhouse for Copilot to ingest, you need to provide it with the actual GLSL snippets and the specific logic for the WebGL pipeline. Copilot thrives on context, so giving it the raw mathematical functions and the architectural patterns will allow it to generate the boilerplate instantly.
+Here is the exact code and logic to drop into your documentation.
+
+1. The Attractor Math Snippets (src/shaders/attractors/)
+Feed these directly into your markdown docs. Copilot will use these to build the compute.frag switch statements.
+Clifford Attractor (clifford.glsl)
+OpenGL Shading Language
+// A, B, C, D are typically uniforms driven by JS, 
+// usually ranging between -3.0 and 3.0 for best visual results.
+vec2 clifford(vec2 pos, float a, float b, float c, float d) {
+    float nextX = sin(a * pos.y) + c * cos(a * pos.x);
+    float nextY = sin(b * pos.x) + d * cos(b * pos.y);
+    return vec2(nextX, nextY);
+}
+
+
+Peter de Jong Attractor (de-jong.glsl)
+OpenGL Shading Language
+// Creates beautiful, glowing bioluminescent webs. 
+// Parameters A, B, C, D usually between -3.0 and 3.0.
+vec2 deJong(vec2 pos, float a, float b, float c, float d) {
+    float nextX = sin(a * pos.y) - cos(b * pos.x);
+    float nextY = sin(c * pos.x) - cos(d * pos.y);
+    return vec2(nextX, nextY);
+}
+
+
+Aizawa Attractor (3D) (aizawa.glsl)
+OpenGL Shading Language
+// 3D Sphere Vortex. Needs a small timestep (dt) for numerical stability.
+// Default params: a=0.95, b=0.7, c=0.6, d=3.5, e=0.25, f=0.1
+vec3 aizawa(vec3 pos, float a, float b, float c, float d, float e, float f, float dt) {
+    float x = pos.x; float y = pos.y; float z = pos.z;
+    
+    float dx = (z - b) * x - d * y;
+    float dy = d * x + (z - b) * y;
+    float dz = c + a * z - (z * z * z) / 3.0 - (x * x + y * y) * (1.0 + e * z) + f * z * x * x * x;
+    
+    return pos + vec3(dx, dy, dz) * dt;
+}
+
+
+
+2. The GPGPU Compute Shader Logic (src/shaders/compute.frag)
+To get millions of particles running at 60fps, you can't calculate them in JavaScript. You have to store their positions in a texture and update them on the GPU.
+Give Copilot this conceptual logic to build the compute shader:
+OpenGL Shading Language
+uniform sampler2D u_particleData; // RGBA texture: RG = Position, BA = Velocity
+uniform vec4 u_params; // a, b, c, d for the attractor
+uniform float u_time;
+uniform float u_speed; // Controls how fast particles step through the math
+
+void main() {
+    vec2 uv = gl_FragCoord.xy / resolution.xy;
+    vec4 data = texture2D(u_particleData, uv);
+    
+    vec2 currentPos = data.xy;
+    vec2 currentVel = data.zw;
+    
+    // 1. Calculate next position using chosen attractor
+    vec2 targetPos = clifford(currentPos, u_params.x, u_params.y, u_params.z, u_params.w);
+    
+    // 2. Interpolate for smooth motion instead of instantly jumping
+    vec2 nextPos = mix(currentPos, targetPos, u_speed);
+    
+    // 3. Calculate new velocity for color mapping in the render pass
+    vec2 newVel = nextPos - currentPos;
+    
+    // Write data back to the FBO
+    gl_FragColor = vec4(nextPos, newVel);
+}
+
+
+
+3. Velocity-to-Color Mapping (src/shaders/render.frag)
+This is where the maximalist visual pop happens. The faster a particle is whipping around the attractor node, the brighter and more shifted its color should be.
+OpenGL Shading Language
+uniform sampler2D u_particleData;
+uniform sampler2D u_colorRamp; // A 1D texture containing your hyper-saturated palette
+
+void main() {
+    // Note: gl_PointCoord is used to draw the particle as a soft circle
+    vec2 uv = gl_FragCoord.xy / resolution.xy;
+    vec4 data = texture2D(u_particleData, uv);
+    
+    vec2 velocity = data.zw;
+    float speed = length(velocity);
+    
+    // Map speed to a 0.0 -> 1.0 range (adjust multiplier based on attractor scale)
+    float normalizedSpeed = clamp(speed * 5.0, 0.0, 1.0);
+    
+    // Sample your vivid palette based on how fast the particle is moving
+    vec3 baseColor = texture2D(u_colorRamp, vec2(normalizedSpeed, 0.5)).rgb;
+    
+    // Shape the particle into a soft, glowing dot rather than a harsh square
+    float dist = length(gl_PointCoord - vec2(0.5));
+    float alpha = smoothstep(0.5, 0.1, dist);
+    
+    // Low opacity is CRITICAL for additive blending to look like glowing smoke
+    gl_FragColor = vec4(baseColor, alpha * 0.05); 
+}
+
+
+
+4. JavaScript Architecture Directives (src/js/main.js)
+Feed these bullet points into Copilot so it knows how to structure the Three.js or raw WebGL boilerplate:
+Additive Blending: Instruct Copilot to set the WebGL blend function to gl.blendFunc(gl.SRC_ALPHA, gl.ONE). This ensures that when 50,000 faint particles overlap at the dense mathematical nodes, they blow out into intense, glowing hot spots.
+The FBO Ping-Pong: Define two Framebuffer Objects (FBO A and FBO B).
+Frame 1: Read particle positions from FBO A, calculate new positions in compute.frag, write results to FBO B.
+Frame 2: Read from FBO B, calculate, write to FBO A.
+The Ghost Trail (Temporal Blur): In the post-processing step, do not use gl.clear(). Instead, draw a full-screen quad over the previous frame with a black fill and an opacity of 0.05. This leaves a glowing, dissolving trail behind moving particles, creating that smeared, dreamlike structure.
+Palette Generator Array: Have Copilot generate an array of hex codes for your tonal guides (e.g., ["#00FFFF", "#FF00FF", "#FFFF00", "#000000"]) and write a helper function to compile that array into a 1D DataTexture to pass to the u_colorRamp uniform in the fragment shader.
+To complete the repository and give GitHub Copilot the final pieces of the puzzle, we need to outline the aesthetic finishing layer and the color data structures. This is where the raw math gets transformed into that hyper-vibrant, nostalgic visual pop.
+Here are the final files to drop into your documentation:
+5. The Aesthetic Finisher (src/shaders/post-process.frag)
+This shader takes the blazing, additive-blended particle output and grounds it with analog artifacts. Copilot can use this to build the final pass in your rendering pipeline.
+OpenGL Shading Language
+uniform sampler2D u_tDiffuse; // The raw rendered particles from the FBO
+uniform float u_time;
+varying vec2 vUv;
+
+void main() {
+    vec2 uv = vUv;
+    
+    // 1. Chromatic Aberration (RGB Shift)
+    // Separates the color channels slightly at the edges for a lens-distortion feel
+    float shift = 0.003 + (sin(u_time * 2.0) * 0.001); // Slight pulse
+    float r = texture2D(u_tDiffuse, uv + vec2(shift, 0.0)).r;
+    float g = texture2D(u_tDiffuse, uv).g;
+    float b = texture2D(u_tDiffuse, uv - vec2(shift, 0.0)).b;
+    vec3 color = vec3(r, g, b);
+    
+    // 2. CRT Phosphor Scanlines
+    // Adds a subtle horizontal frequency interference
+    float scanline = sin(uv.y * 800.0 * 3.14159) * 0.04;
+    color -= scanline;
+    
+    // 3. Vignette (Edge Darkening)
+    // Focuses the eye on the center attractor nodes
+    float dist = distance(uv, vec2(0.5));
+    color *= smoothstep(0.85, 0.3, dist);
+    
+    // 4. Shoegaze Smear (Temporal Decay)
+    // Note: The actual "smear" happens in the FBO ping-pong, 
+    // but we ensure the output alpha supports it here.
+    gl_FragColor = vec4(color, 1.0);
+}
+
+
+6. The Tonal Guide Generator (src/js/color-maps.js)
+To get the most visual impact, you need extreme, hyper-saturated color ramps. You want tonal qualities that rely on aggressive, high-contrast neon palettes—electric magentas, intense cyans, ultraviolet purples, and radioactive yellows—rather than standard heatmap gradients.
+Feed this logic to Copilot to generate a 1D DataTexture that the fragment shader can sample based on particle velocity:
+JavaScript
+// Function to generate a 1x256 pixel texture ramp from a hex palette
+export function createNeonColorRamp(gl) {
+    // A tonal guide using intense, hyper-saturated contrasts
+    // Maps from slow (dark/violet) to fast (blazing cyan/yellow)
+    const hexPalette = [
+        "#0a001a", // Deep void purple
+        "#ff007f", // Electric magenta
+        "#9d00ff", // Intense violet
+        "#00ffff", // Neon cyan
+        "#fff700"  // Blinding yellow
+    ];
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 1;
+    const ctx = canvas.getContext('2d');
+    
+    // Create a smooth linear gradient across the 256 pixels
+    const gradient = ctx.createLinearGradient(0, 0, 256, 0);
+    hexPalette.forEach((hex, index) => {
+        gradient.addColorStop(index / (hexPalette.length - 1), hex);
+    });
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 256, 1);
+    
+    // Extract pixel data to send to the WebGL texture
+    const imgData = ctx.getImageData(0, 0, 256, 1).data;
+    
+    // Copilot instruction: Bind 'imgData' to a gl.TEXTURE_2D
+    // with gl.TEXTURE_MIN_FILTER = gl.LINEAR
+    return imgData; 
+}
+
+
+7. The Entry Point (index.html)
+Finally, a clean markup structure so Copilot knows how to bind the canvas and load the modules.
+HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shader Forge - Strange Attractors</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; }
+        canvas { display: block; width: 100vw; height: 100vh; }
+        #ui-layer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00ffff;
+            font-family: monospace;
+            text-shadow: 0 0 5px #ff007f;
+        }
+    </style>
+</head>
+<body>
+    <div id="ui-layer">
+        <h2>STRANGE ATTRACTORS</h2>
+        <p>Current Engine: Peter de Jong</p>
+    </div>
+    <canvas id="glcanvas"></canvas>
+    
+    <script type="module" src="./src/js/main.js"></script>
+</body>
+</html>
+
+
+With this complete set of architectural instructions, math snippets, and rendering logic, GitHub Copilot will have maximum context. It will understand exactly how the math maps to the GPU, how the FBO creates the ghost trails, and how the color arrays inject that specific, hyper-vibrant tonal energy into the final render.
+
