@@ -1,0 +1,8 @@
+{
+  "description": "Strange attractor math engines + GPU rendering reference for RepoScripter2",
+  "files": [
+    "README.md",
+    "strange_attractors.js",
+    "repo_seed.txt"
+  ]
+}
